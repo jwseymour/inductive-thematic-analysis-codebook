@@ -1,0 +1,100 @@
+{
+  "name": "Demo — what makes a weeknight dinner feel easy",
+  "analyst": "A. Demo",
+  "note": "A tiny synthetic example (3 short interviews + one photo note), made up to show how the tool works.",
+  "sections": ["interviews", "photos"],
+  "sources": [
+    {
+      "name": "D1 — interview",
+      "section": "interviews",
+      "participant": "D1",
+      "note": "Synthetic demo data.",
+      "paragraphs": [
+        "Interviewer: Talk me through a normal weeknight, whatever happens around dinner.",
+        "D1: Honestly the hard bit is deciding. By six I just want someone to tell me what we're eating. Once I know what it is, actually cooking it is fine, that part doesn't bother me.",
+        "D1: We rotate the same five or six meals. Pasta, a stir fry, jacket potatoes, that sort of thing. I don't really plan, I just pick off the list in my head.",
+        "Interviewer: What makes a night feel like too much effort?",
+        "D1: If I'm tired and there's washing up already in the sink, that's usually when we end up getting a takeaway. It's not really about the cooking, it's walking into a messy kitchen."
+      ]
+    },
+    {
+      "name": "D2 — interview",
+      "section": "interviews",
+      "participant": "D2",
+      "note": "Synthetic demo data.",
+      "paragraphs": [
+        "Interviewer: When does a weeknight dinner feel easy?",
+        "D2: When I've done something at the weekend. If I batch a chilli or a curry on Sunday then Tuesday is just reheating, and I feel quite smug about it.",
+        "D2: I use a lot of shortcuts. Jarred sauce, pre-chopped stuff, the bags of frozen veg. I used to feel a bit bad about it but I've made peace with it, it still counts as cooking.",
+        "D2: My partner usually picks. I can't be bothered to have the what do you fancy conversation, so I just ask them and go with whatever they say."
+      ]
+    },
+    {
+      "name": "D3 — interview",
+      "section": "interviews",
+      "participant": "D3",
+      "note": "Synthetic demo data.",
+      "paragraphs": [
+        "Interviewer: What does an easy dinner look like for you?",
+        "D3: Few steps, one pan ideally, nothing where I have to keep checking a recipe. If I'm reading instructions off my phone it already feels like a lot.",
+        "D3: It depends how the day went. A bad day and the bar drops to beans on toast and I don't feel any kind of way about it. A normal day I'll actually cook something.",
+        "D3: We always eat together at the table though, even if it's something rubbish. That bit matters more to me than what it actually is."
+      ]
+    },
+    {
+      "name": "Photo note — D2's kitchen",
+      "section": "photos",
+      "participant": "D2",
+      "note": "Synthetic demo data — researcher description of a participant photo.",
+      "paragraphs": [
+        "D2 photographed their kitchen before starting to cook. Clear worktop, one chopping board out, a jar of sauce and a bag of frozen peas set next to the hob. The caption they added: ready to go, this is the dream."
+      ]
+    }
+  ],
+  "codes": [
+    { "label": "the deciding is the hard part", "memo": "The effort is in choosing what to make, not in the cooking itself." },
+    { "label": "small fixed repertoire", "memo": "Falls back on a short rotation of known meals rather than choosing freely." },
+    { "label": "hands the choice to someone else", "memo": "Partner, kids or an app decides, to avoid making the call." },
+    { "label": "tiredness sets the bar", "memo": "How the day went decides how much effort is acceptable that night." },
+    { "label": "batch-cooked earlier in the week", "memo": "Work done at the weekend so a weeknight is just reheating." },
+    { "label": "shortcut ingredients, guilt then peace", "memo": "Jars / pre-chopped / frozen, initially felt bad about, later accepted." },
+    { "label": "kitchen has to be clear first", "memo": "A messy kitchen is the thing that tips a night into takeaway." },
+    { "label": "no recipe to follow", "memo": "Having to read instructions makes it feel like a lot." },
+    { "label": "eating together matters", "memo": "The shared meal is the point, more than the food." }
+  ],
+  "segments": [
+    { "source": "D1 — interview", "quote": "the hard bit is deciding", "codes": ["the deciding is the hard part"] },
+    { "source": "D1 — interview", "quote": "I just want someone to tell me what we're eating", "codes": ["hands the choice to someone else", "the deciding is the hard part"] },
+    { "source": "D1 — interview", "quote": "We rotate the same five or six meals", "codes": ["small fixed repertoire"] },
+    { "source": "D1 — interview", "quote": "it's walking into a messy kitchen", "codes": ["kitchen has to be clear first", "tiredness sets the bar"] },
+    { "source": "D2 — interview", "quote": "If I batch a chilli or a curry on Sunday then Tuesday is just reheating", "codes": ["batch-cooked earlier in the week"] },
+    { "source": "D2 — interview", "quote": "I used to feel a bit bad about it but I've made peace with it", "codes": ["shortcut ingredients, guilt then peace"] },
+    { "source": "D2 — interview", "quote": "Jarred sauce, pre-chopped stuff, the bags of frozen veg", "codes": ["shortcut ingredients, guilt then peace"] },
+    { "source": "D2 — interview", "quote": "My partner usually picks", "codes": ["hands the choice to someone else"] },
+    { "source": "D2 — interview", "quote": "I can't be bothered to have the what do you fancy conversation", "codes": ["the deciding is the hard part"] },
+    { "source": "D3 — interview", "quote": "one pan ideally, nothing where I have to keep checking a recipe", "codes": ["no recipe to follow", "the deciding is the hard part"] },
+    { "source": "D3 — interview", "quote": "the bar drops to beans on toast", "codes": ["tiredness sets the bar"] },
+    { "source": "D3 — interview", "quote": "We always eat together at the table", "codes": ["eating together matters"] },
+    { "source": "Photo note — D2's kitchen", "quote": "Clear worktop, one chopping board out", "codes": ["kitchen has to be clear first"] }
+  ],
+  "themes": [
+    {
+      "name": "Easy means fewer decisions",
+      "section": "interviews",
+      "definition": "When people call a dinner easy they mostly mean they didn't have to decide much. The cooking is not the burden; choosing what to cook is. They shrink the decision by leaning on a short fixed rotation of meals, or by handing the choice to someone else.",
+      "codes": ["the deciding is the hard part", "small fixed repertoire", "hands the choice to someone else", "no recipe to follow"]
+    },
+    {
+      "name": "Tiredness is the real constraint",
+      "section": "interviews",
+      "definition": "How much effort counts as acceptable is set by how the day went, not the clock. A bad day lowers the bar to toast with no guilt; a normal day and people cook. The main coping move is doing the work earlier — batch-cooking at the weekend.",
+      "codes": ["tiredness sets the bar", "batch-cooked earlier in the week", "shortcut ingredients, guilt then peace"]
+    },
+    {
+      "name": "The kitchen has to be ready",
+      "section": "interviews",
+      "definition": "A dinner feels doable or not partly before any cooking starts, based on the state of the kitchen. A sink of washing up tips a tired night into a takeaway; the photo shows the flip side, a cleared worktop with the shortcuts to hand.",
+      "codes": ["kitchen has to be clear first", "shortcut ingredients, guilt then peace"]
+    }
+  ]
+}
