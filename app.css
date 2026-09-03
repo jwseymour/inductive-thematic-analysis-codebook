@@ -163,6 +163,46 @@ label.fl{display:block; font-size:11px; text-transform:uppercase; letter-spacing
 .chip .dot{width:7px; height:7px; border-radius:50%; background:var(--cc,var(--accent))}
 .chip button{background:transparent; border:none; color:var(--ink-soft); padding:0 0 0 2px; font-size:13px; line-height:1}
 .chip button:hover{color:var(--bad)}
+.chip.clicky{cursor:pointer}
+.chip.clicky:hover{background:color-mix(in srgb, var(--cc,var(--accent)) 28%, var(--surface))}
+button.chip{font-family:var(--mono)}
+
+/* drill-down: extracts under a code / theme */
+button.linky{background:transparent; border:none; padding:0; font:inherit; color:var(--accent-ink); cursor:pointer; border-bottom:1px solid color-mix(in srgb,var(--accent-ink) 40%,transparent)}
+button.linky:hover{color:var(--ink); border-bottom-color:var(--ink)}
+
+.modal.wide{max-width:720px; display:flex; flex-direction:column; max-height:86vh}
+.modal.wide > h3{flex:0 0 auto; margin-bottom:4px}
+.modal.wide > .m-acts{flex:0 0 auto; margin-top:12px; padding-top:12px; border-top:1px solid var(--hairline)}
+
+.exb{display:flex; flex-direction:column; min-height:0; flex:1 1 auto}
+.exb-meta{font-family:var(--mono); font-size:10px; letter-spacing:.03em; color:var(--ink-faint); margin-bottom:12px}
+.exb-def{font-size:12.5px; line-height:1.55; color:var(--ink-soft); background:var(--surface-2); border:1px solid var(--hairline); border-radius:6px; padding:9px 11px; margin-bottom:14px; max-height:10em; overflow:auto}
+.exb-list{flex:1 1 auto; min-height:0; margin:0 -6px; padding:0 6px}
+.exb-list.scroll{overflow-y:auto}
+.exb-grp + .exb-grp{margin-top:12px}
+.exb-gh{display:flex; align-items:center; gap:8px; padding:7px 2px; border-bottom:1px solid var(--hairline-strong); margin-bottom:2px}
+.exb-gh .dot{width:8px; height:8px; border-radius:2px; background:var(--cc,var(--accent)); flex:none}
+.exb-gh .lbl{font-family:var(--mono); font-size:11.5px; font-weight:500; color:var(--ink); background:transparent; border:none; padding:0; text-align:left}
+.exb-gh .lbl:hover{color:var(--accent-ink); text-decoration:underline}
+.exb-gh .n{margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--ink-faint); flex:none}
+.exb-gh .exb-drop{flex:none; background:transparent; border:none; font-family:var(--mono); font-size:10px; color:var(--ink-faint); padding:2px 4px; border-radius:4px}
+.exb-gh .exb-drop:hover{color:var(--bad); background:var(--surface-2)}
+.exb-row{padding:11px 2px 12px; border-bottom:1px solid var(--hairline)}
+.exb-grp .exb-row{padding-left:16px}
+.exb-list > .exb-row:last-child, .exb-grp:last-child .exb-row:last-child{border-bottom:none}
+.exb-q{margin:0; font-family:var(--serif); font-size:14.5px; line-height:1.52; color:var(--ink); border-left:2px solid var(--hairline-strong); padding-left:11px}
+.exb-q::before{content:"“"} .exb-q::after{content:"”"}
+.exb-foot{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px; padding-left:13px}
+.exb-where{font-family:var(--mono); font-size:10px; color:var(--ink-faint); display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0}
+.exb-who{background:var(--surface-2); border:1px solid var(--hairline-strong); border-radius:10px; padding:0 6px; color:var(--ink-soft); font-weight:500}
+.exb-foot > .btn{flex:none; color:var(--accent-ink)}
+.exb-foot > .btn:hover{background:var(--accent-soft)}
+.exb-codes{display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; padding-left:13px}
+.exb-ct{display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:10px; padding:1px 7px; border-radius:20px; background:color-mix(in srgb, var(--cc,var(--accent)) 12%, var(--surface)); border:1px solid color-mix(in srgb, var(--cc,var(--accent)) 38%, transparent); color:var(--ink-soft)}
+.exb-ct .dot{width:6px; height:6px; border-radius:50%; background:var(--cc,var(--accent))}
+.exb-ct:hover{color:var(--ink); background:color-mix(in srgb, var(--cc,var(--accent)) 22%, var(--surface))}
+.para.flash{background:var(--accent-soft); border-radius:4px; box-shadow:0 0 0 4px var(--accent-soft); transition:background .5s, box-shadow .5s}
 
 /* code list */
 .code-row{display:grid; grid-template-columns:14px 1fr auto auto; gap:12px; align-items:center; padding:9px 4px; border-bottom:1px solid var(--hairline)}
@@ -177,7 +217,8 @@ label.fl{display:block; font-size:11px; text-transform:uppercase; letter-spacing
 .theme-card .tc-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
 .theme-card h3{font-family:var(--serif); font-style:italic; font-weight:500; font-size:19px; letter-spacing:-.01em}
 .theme-card .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint)}
-.theme-card .tc-count{font-family:var(--mono); font-size:11px; color:var(--accent-ink); margin-left:auto}
+.theme-card .tc-count{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-left:auto}
+.theme-card .tc-count .linky{color:var(--accent-ink)}
 .theme-card .def{margin:9px 0; color:var(--ink); font-size:13.5px; line-height:1.55}
 .theme-card .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
 .theme-card .tc-tools{display:flex; gap:6px; margin-top:12px; flex-wrap:wrap}

@@ -132,11 +132,12 @@ function renderData(m){
   const add=el("div",{class:"panel row"});
   add.append(el("button",{class:"btn primary",text:"Add source",onclick:addSourceModal}));
   add.append(el("button",{class:"btn",text:"Import .txt file",onclick:importTxt}));
+  const srcs=state.sources.filter(s=>sectionMatch(s.section));
+  if(srcs.length)add.append(el("button",{class:"btn",text:"Download sources (.zip)",title:"Every source as a plain .txt file, foldered by data set — the text only, no codes.",onclick:downloadSourcesZip}));
   add.append(el("span",{class:"muted",style:"font-size:12px",text:"One source = one transcript / document. Give it a data-set label to keep separate analyses apart."}));
   v.append(add);
 
   const list=el("div",{style:"margin-top:14px"});
-  const srcs=state.sources.filter(s=>sectionMatch(s.section));
   if(!srcs.length)list.append(emptyState("No sources yet","Add a transcript or document, or load the demo project from the Project menu.",addSourceModal));
   const groups={};
   srcs.forEach(s=>{(groups[s.section||"(unlabelled)"]=groups[s.section||"(unlabelled)"]||[]).push(s);});
@@ -303,7 +304,7 @@ function inspectSegments(ids){
     });
     block.append(chips);
     const acts=el("div",{class:"row",style:"gap:6px;margin-top:8px"});
-    acts.append(el("button",{class:"btn sm",text:"Add code",onclick:()=>{closeModal();openPickerForSeg(sg);}}));
+    acts.append(el("button",{class:"btn sm",text:"Add code",onclick:()=>{closeModal();setTimeout(()=>openPickerForSeg(sg),0);}}));
     acts.append(el("button",{class:"btn sm ghost danger",text:"Delete extract",onclick:()=>{state.segments=state.segments.filter(x=>x.id!==sg.id);save();closeModal();render();}}));
     block.append(acts);
     body.append(block);
@@ -314,6 +315,101 @@ function openPickerForSeg(sg){
   const tip=$("#seltip");tip.style.display="flex";tip.style.left=(window.innerWidth/2-70)+"px";tip.style.top=(window.innerHeight/2-120)+"px";
   openPicker(null,sg.id);
   tip.style.display="none";
+}
+
+/* --- drill-down: every extract under a code or a theme --- */
+function segsForCode(cid){return state.segments.filter(s=>s.codeIds.includes(cid));}
+function segSort(a,b){return (a.sourceId||"").localeCompare(b.sourceId||"")||a.paraIndex-b.paraIndex||a.start-b.start;}
+function whoLabel(sg){
+  const src=srcById(sg.sourceId)||{};
+  let where=src.name||"source";
+  if(src.participant&&where.toLowerCase().startsWith(src.participant.toLowerCase()))
+    where=where.slice(src.participant.length).replace(/^[\s\-–—·:]+/,"");
+  return {who:src.participant||"", where:where+" · ¶"+(sg.paraIndex+1)};
+}
+// segs, {def, groupBy:[codeId,...], ofCode, meta:bool, scroll:bool, onRemoveCode:fn(cid), title}
+function extractsBlock(segs,opts){
+  opts=opts||{};
+  const wrap=el("div",{class:"exb"});
+  if(opts.meta){
+    const ppl=[...new Set(segs.map(s=>(srcById(s.sourceId)||{}).participant).filter(Boolean))].sort();
+    const bits=[segs.length+" extract"+(segs.length===1?"":"s")];
+    if(opts.groupBy)bits.push(opts.groupBy.length+" code"+(opts.groupBy.length===1?"":"s"));
+    if(ppl.length)bits.push(ppl.join(" · "));
+    wrap.append(el("div",{class:"exb-meta",text:bits.join("   ·   ")}));
+  }
+  if(opts.def)wrap.append(el("div",{class:"exb-def",text:opts.def}));
+  const list=el("div",{class:"exb-list"+(opts.scroll?" scroll":"")});
+  if(!segs.length){
+    list.append(el("p",{class:"muted",style:"font-size:12.5px;padding:10px 2px",text:"No extracts here yet."}));
+  }else if(opts.groupBy&&opts.groupBy.length>1){
+    const seen=new Set();
+    opts.groupBy.forEach(cid=>{
+      const c=codeById(cid);if(!c)return;
+      const rows=segs.filter(s=>s.codeIds.includes(cid)&&!seen.has(s.id)).sort(segSort);
+      rows.forEach(s=>seen.add(s.id));
+      if(!rows.length)return;
+      const g=el("div",{class:"exb-grp"});
+      const gh=el("div",{class:"exb-gh",style:"--cc:"+c.color});
+      gh.append(el("span",{class:"dot"}));
+      gh.append(el("button",{class:"lbl",title:"open just this code, across every theme",
+        text:c.label,onclick:()=>browseExtracts("Code — "+c.label,segsForCode(c.id),{def:c.memo,ofCode:c.id})}));
+      gh.append(el("span",{class:"n",text:rows.length+" ext"}));
+      if(opts.onRemoveCode)gh.append(el("button",{class:"exb-drop",text:"× remove",title:"take this code out of the theme",onclick:()=>opts.onRemoveCode(cid)}));
+      g.append(gh);
+      rows.forEach(s=>g.append(exRow(s,c.id)));
+      list.append(g);
+    });
+  }else{
+    segs.slice().sort(segSort).forEach(s=>list.append(exRow(s,opts.ofCode)));
+  }
+  wrap.append(list);
+  return wrap;
+}
+// title, segments, {def, groupBy, ofCode}
+function browseExtracts(title,segs,opts){
+  opts=opts||{};
+  showModal(title,extractsBlock(segs,{def:opts.def,groupBy:opts.groupBy,ofCode:opts.ofCode,meta:true,scroll:true}),[["Close",closeModal]],true);
+}
+function exRow(sg,skipCid){
+  const r=el("div",{class:"exb-row"});
+  r.append(el("blockquote",{class:"exb-q",text:norm(sg.text)}));
+  const foot=el("div",{class:"exb-foot"});
+  const {who,where}=whoLabel(sg);
+  const w=el("span",{class:"exb-where"});
+  if(who)w.append(el("span",{class:"exb-who",text:who}));
+  w.append(document.createTextNode(where));
+  foot.append(w);
+  foot.append(el("button",{class:"btn sm ghost",text:"go to source →",onclick:()=>goToSegment(sg)}));
+  r.append(foot);
+  const others=sg.codeIds.filter(c=>c!==skipCid).map(codeById).filter(Boolean);
+  if(others.length){
+    const cc=el("div",{class:"exb-codes"});
+    others.forEach(c=>{
+      const t=el("button",{class:"exb-ct",style:"--cc:"+c.color,title:"open this code",
+        onclick:()=>browseExtracts("Code — "+c.label,segsForCode(c.id),{def:c.memo,ofCode:c.id})});
+      t.append(el("span",{class:"dot"}),document.createTextNode(c.label));
+      cc.append(t);
+    });
+    r.append(cc);
+  }
+  return r;
+}
+function goToSegment(sg){
+  closeModal();
+  const src=srcById(sg.sourceId);if(!src)return;
+  state.ui.view="data";
+  if(state.ui.section!=="__all"&&src.section&&state.ui.section!==src.section)state.ui.section="__all";
+  state.ui.openSrc=sg.sourceId;
+  save();render();
+  const hit=()=>{
+    const p=document.querySelector('.para[data-src="'+sg.sourceId+'"][data-para="'+sg.paraIndex+'"]');
+    if(!p)return false;
+    p.scrollIntoView({block:"center"});
+    p.classList.add("flash");setTimeout(()=>p.classList.remove("flash"),2000);
+    return true;
+  };
+  if(!hit())setTimeout(hit,80);
 }
 
 /* --- CODES --- */
@@ -333,7 +429,8 @@ function renderCodes(m){
     const secs=codeSections(c.id);
     if(secs.length)cn.append(el("div",{class:"meta",text:secs.join(" · ")}));
     r.append(cn);
-    r.append(el("span",{class:"meta",text:codeExtractCount(c.id)+" ext"}));
+    r.append(el("button",{class:"meta linky",title:"see every extract with this code",
+      text:codeExtractCount(c.id)+" ext",onclick:()=>browseExtracts("Code — "+c.label,segsForCode(c.id),{def:c.memo,ofCode:c.id})}));
     const acts=el("div",{class:"acts"});
     acts.append(el("button",{class:"btn sm ghost",text:"Edit",onclick:()=>editCodeModal(c)}));
     acts.append(el("button",{class:"btn sm ghost",text:"Merge",onclick:()=>mergeCodeModal(c)}));
@@ -382,7 +479,7 @@ function mergeCodeModal(c){
 function renderThemes(m){
   const v=el("div",{class:"view"});
   const bn=exampleBanner();if(bn)v.append(bn);
-  v.append(head("Themes","Group codes into themes so the exports can collate extracts by theme. The interpreting happens in your write-up; this is just the grouping."));
+  v.append(head("Themes","Group codes into themes so the exports can collate extracts by theme. The interpreting happens in your write-up; this is just the grouping. Click a theme's extract count, or any code chip, to read the extracts."));
   const bar=el("div",{class:"panel row"});
   bar.append(el("button",{class:"btn primary",text:"New theme",onclick:()=>newThemeModal()}));
   bar.append(el("span",{class:"muted",style:"font-size:12px",text:"Give a theme the same data-set label as its codes."}));
@@ -395,10 +492,11 @@ function renderThemes(m){
   const loose=filteredCodes().filter(c=>!inThemes.has(c.id));
   const u=el("div",{class:"unthemed",style:"margin-top:8px"});
   u.append(el("h4",{class:"group-h",text:"Codes not yet in a theme ("+loose.length+")"}));
-  if(!loose.length)u.append(el("span",{class:"muted",style:"font-size:12px",text:"None — every code sits in at least one theme."}));
+  if(!loose.length)u.append(el("span",{class:"muted",style:"font-size:12px",text:"None \u2014 every code sits in at least one theme."}));
   const lc=el("div",{class:"row",style:"gap:6px"});
   loose.forEach(c=>{
-    const ch=el("span",{class:"chip",style:"--cc:"+c.color});
+    const ch=el("span",{class:"chip clicky",style:"--cc:"+c.color,title:c.memo||"click to read this code's extracts",
+      onclick:e=>{if(e.target.closest("select"))return;browseExtracts("Code \u2014 "+c.label,segsForCode(c.id),{def:c.memo,ofCode:c.id});}});
     ch.append(el("span",{class:"dot"}),document.createTextNode(c.label+" ("+codeExtractCount(c.id)+")"));
     if(state.themes.length){
       const s=el("select",{class:"chip-sel"});
@@ -418,27 +516,33 @@ function themeCard(t){
   const h=el("div",{class:"tc-head"});
   h.append(el("h3",{text:t.name}));
   if(t.section)h.append(el("span",{class:"tag",text:t.section}));
-  h.append(el("span",{class:"tc-count",text:themeExtracts(t).length+" extracts · "+t.codeIds.length+" codes"}));
+  const cnt=el("span",{class:"tc-count"});
+  cnt.append(el("button",{class:"linky",title:"read every extract under this theme",
+    text:themeExtracts(t).length+" extracts",onclick:()=>browseExtracts("Theme \u2014 "+t.name,themeExtracts(t),{def:t.definition||"",groupBy:t.codeIds})}));
+  cnt.append(document.createTextNode(" \u00b7 "+t.codeIds.length+" codes"));
+  h.append(cnt);
   card.append(h);
   if(t.definition)card.append(el("div",{class:"def",text:t.definition}));
   const chips=el("div",{class:"chips"});
   t.codeIds.forEach(cid=>{
     const c=codeById(cid);if(!c)return;
-    const ch=el("span",{class:"chip",style:"--cc:"+c.color});
+    const ch=el("span",{class:"chip clicky",style:"--cc:"+c.color,title:c.memo||"click to read this code's extracts",
+      onclick:e=>{if(e.target.closest("button"))return;browseExtracts("Code \u2014 "+c.label,segsForCode(cid),{def:c.memo,ofCode:cid});}});
     ch.append(el("span",{class:"dot"}),document.createTextNode(c.label));
-    ch.append(el("button",{text:"×",title:"remove from theme",onclick:()=>{t.codeIds=t.codeIds.filter(x=>x!==cid);save();render();}}));
+    ch.append(el("button",{text:"\u00d7",title:"remove from theme",onclick:()=>{t.codeIds=t.codeIds.filter(x=>x!==cid);save();render();}}));
     chips.append(ch);
   });
   card.append(chips);
   const tools=el("div",{class:"tc-tools"});
   tools.append(el("button",{class:"btn sm",text:"Add codes",onclick:()=>addCodesToThemeModal(t)}));
   tools.append(el("button",{class:"btn sm ghost",text:"Edit",onclick:()=>newThemeModal(t)}));
-  tools.append(el("button",{class:"btn sm ghost",text:"↑",onclick:()=>reorderTheme(t,-1)}));
-  tools.append(el("button",{class:"btn sm ghost",text:"↓",onclick:()=>reorderTheme(t,1)}));
-  tools.append(el("button",{class:"btn sm ghost danger",text:"Delete",onclick:()=>confirmModal("Delete theme “"+t.name+"”?","The codes stay; they return to the unthemed pool.",()=>{state.themes=state.themes.filter(x=>x.id!==t.id);save();render();})}));
+  tools.append(el("button",{class:"btn sm ghost",text:"\u2191",onclick:()=>reorderTheme(t,-1)}));
+  tools.append(el("button",{class:"btn sm ghost",text:"\u2193",onclick:()=>reorderTheme(t,1)}));
+  tools.append(el("button",{class:"btn sm ghost danger",text:"Delete",onclick:()=>confirmModal("Delete theme \u201c"+t.name+"\u201d?","The codes stay; they return to the unthemed pool.",()=>{state.themes=state.themes.filter(x=>x.id!==t.id);save();render();})}));
   card.append(tools);
   return card;
 }
+
 function reorderTheme(t,dir){
   const same=state.themes.filter(x=>x.section===t.section).sort((a,b)=>(a.order||0)-(b.order||0));
   const i=same.indexOf(t),j=i+dir;
@@ -452,9 +556,9 @@ function newThemeModal(t){
   body.append(el("label",{class:"fl",text:"Theme name"}));
   const nm=el("input",{class:"txt",placeholder:"e.g. The grandparent reflex"});nm.value=t?t.name:"";body.append(nm);
   body.append(el("label",{class:"fl",text:"Data set"}));
-  const sec=el("input",{class:"txt",placeholder:"drawing / names / ui …",list:"secdl"});sec.value=t?(t.section||""):(activeSection()==="__all"?"":activeSection());body.append(sec);
+  const sec=el("input",{class:"txt",placeholder:"drawing / names / ui \u2026",list:"secdl"});sec.value=t?(t.section||""):(activeSection()==="__all"?"":activeSection());body.append(sec);
   const dl=el("datalist",{id:"secdl"});state.sections.forEach(s=>dl.append(el("option",{value:s})));body.append(dl);
-  body.append(el("label",{class:"fl",text:"Definition (optional — appears in the themes export)"}));
+  body.append(el("label",{class:"fl",text:"Definition (optional \u2014 appears in the themes export)"}));
   const df=el("textarea",{class:"txt"});df.value=t?(t.definition||""):"";body.append(df);
   showModal(t?"Edit theme":"New theme",body,[["Cancel",closeModal],[t?"Save":"Create",()=>{
     if(!nm.value.trim())return;
@@ -466,7 +570,7 @@ function newThemeModal(t){
 }
 function addCodesToThemeModal(t){
   const body=el("div");
-  body.append(el("p",{text:"Tick codes to add to “"+t.name+"”."}));
+  body.append(el("p",{text:"Tick codes to add to \u201c"+t.name+"\u201d."}));
   const box=el("div",{style:"max-height:340px;overflow:auto"});
   state.codes.filter(c=>!t.codeIds.includes(c.id)).sort((a,b)=>a.label.localeCompare(b.label)).forEach(c=>{
     const l=el("label",{style:"display:flex;gap:8px;align-items:center;padding:5px 2px;font-size:12.5px"});
@@ -739,8 +843,9 @@ function loadExample(){
 }
 
 /* ---------- modal / confirm ---------- */
-function showModal(title,bodyNode,actions){
+function showModal(title,bodyNode,actions,wide){
   const mo=$("#modal");mo.innerHTML="";
+  mo.classList.toggle("wide",!!wide);
   mo.append(el("h3",{text:title}));
   mo.append(bodyNode);
   const bar=el("div",{class:"m-acts"});
@@ -767,6 +872,66 @@ function downloadText(t,name){
     const a=el("a",{href:URL.createObjectURL(new Blob([t],{type:"text/plain"})),download:name});
     document.body.append(a);a.click();a.remove();toast("Download started");
   }catch(e){toast("Download blocked — use Copy");}
+}
+
+/* ---------- minimal zip writer (store / no compression) ---------- */
+function crc32(bytes){
+  let t=crc32._t;
+  if(!t){
+    t=crc32._t=[];
+    for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}
+  }
+  let crc=0xFFFFFFFF;
+  for(let i=0;i<bytes.length;i++)crc=(crc>>>8)^t[(crc^bytes[i])&0xFF];
+  return (crc^0xFFFFFFFF)>>>0;
+}
+function zipBytes(files){
+  const enc=new TextEncoder();
+  const u16=n=>[n&255,(n>>8)&255];
+  const u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];
+  const DOSDATE=33; // 1980-01-01
+  const parts=[],central=[];let offset=0;
+  files.forEach(f=>{
+    const nameB=enc.encode(f.name),data=f.data,crc=crc32(data),size=data.length;
+    const local=new Uint8Array([].concat(
+      u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(DOSDATE),
+      u32(crc),u32(size),u32(size),u16(nameB.length),u16(0)));
+    parts.push(local,nameB,data);
+    central.push(new Uint8Array([].concat(
+      u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(DOSDATE),
+      u32(crc),u32(size),u32(size),u16(nameB.length),u16(0),u16(0),u16(0),u16(0),
+      u32(0),u32(offset))),nameB);
+    offset+=local.length+nameB.length+size;
+  });
+  let cdSize=0;central.forEach(c=>cdSize+=c.length);
+  const end=new Uint8Array([].concat(
+    u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),
+    u32(cdSize),u32(offset),u16(0)));
+  const all=parts.concat(central,[end]);
+  let total=0;all.forEach(a=>total+=a.length);
+  const out=new Uint8Array(total);let p=0;
+  all.forEach(a=>{out.set(a,p);p+=a.length;});
+  return out;
+}
+function downloadSourcesZip(){
+  const srcs=state.sources.filter(s=>sectionMatch(s.section));
+  if(!srcs.length){toast("No sources to export");return;}
+  const enc=new TextEncoder();
+  const safe=s=>String(s).replace(/[\/\\:*?"<>|]+/g,"-").replace(/\s+/g," ").trim()||"untitled";
+  const used={};
+  const files=srcs.map(s=>{
+    const folder=safe(s.section||"unlabelled"),base=safe(s.name);
+    let name=folder+"/"+base+".txt",i=2;
+    while(used[name])name=folder+"/"+base+" ("+(i++)+").txt";
+    used[name]=1;
+    return {name,data:enc.encode(s.paragraphs.join("\n\n")+"\n")};
+  });
+  const fname=(state.name||"sources").replace(/\s+/g,"-").toLowerCase()+".sources.zip";
+  try{
+    const a=el("a",{href:URL.createObjectURL(new Blob([zipBytes(files)],{type:"application/zip"})),download:fname});
+    document.body.append(a);a.click();a.remove();
+    toast(files.length+" source"+(files.length===1?"":"s")+" — zip downloaded");
+  }catch(e){toast("Download blocked by the browser");}
 }
 
 /* ---------- misc ---------- */
